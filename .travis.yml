@@ -1,0 +1,22 @@
+sudo: required
+services: 
+    -docker
+
+befor_install:
+    - docker build -t zuhairahamed/reat-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true zuhairahamed/reat-test npm test 
+
+after_success:
+    - docker build -t zuhairahamed/multi-client ./client
+    - docker build -t zuhairahamed/multi-nginx ./nginx
+    - docker build -t zuhairahamed/multi-server ./server
+    - docker build -t zuhairahamed/multi-worker ./worker
+    #Login to the docker cli
+    - echo "$DOCKER_PASS" | docker login -u "$DOCKER_ID" --password-stdin
+    #Take those images and push them to the docker hub
+    - docker push zuhairahamed/multi-client
+    - docker push zuhairahamed/multi-nginx
+    - docker push zuhairahamed/multi-server
+    - docker push zuhairahamed/multi-worker
